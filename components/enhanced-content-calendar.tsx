@@ -70,7 +70,7 @@ export function EnhancedContentCalendarComponent() {
 
   return (
     <div className="flex flex-col items-center space-y-4 p-4">
-      <h1 className="text-2xl font-bold">Fairway Content Calendar</h1>
+      <h1 className="text-2xl font-bold">Enhanced Content Calendar</h1>
       <div className="flex space-x-4">
         <Calendar
           mode="single"
