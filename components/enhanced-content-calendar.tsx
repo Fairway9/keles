@@ -1,31 +1,32 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Calendar } from "@/components/ui/calendar"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
+import { useState, useEffect } from "react";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { table } from '@/lib/airtable';
 
 type ContentItem = {
-  date: Date
-  title: string
-  platform: string
-  media: string
-  caption: string
-  hashtags: string
-  [key: string]: string | Date // Allow for additional fields
-}
+  date: Date;
+  title: string;
+  platform: string;
+  media: string;
+  caption: string;
+  hashtags: string;
+  [key: string]: string | Date; // Allow for additional fields
+};
 
-const platforms = ["Instagram", "TikTok", "LinkedIn"]
-const mediaTypes = ["Video", "Image", "Carousel"]
+const platforms = ["Instagram", "Website", "LinkedIn"];
+const mediaTypes = ["Video", "Image", "Blog", "Carousel"];
 
 export function EnhancedContentCalendarComponent() {
-  const [date, setDate] = useState<Date | undefined>(new Date())
-  const [content, setContent] = useState<ContentItem[]>([])
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [content, setContent] = useState<ContentItem[]>([]);
   const [newContent, setNewContent] = useState<ContentItem>({
     date: new Date(),
     title: "",
@@ -33,17 +34,28 @@ export function EnhancedContentCalendarComponent() {
     media: "",
     caption: "",
     hashtags: "",
-  })
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [additionalFields, setAdditionalFields] = useState<string[]>([])
+  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [additionalFields, setAdditionalFields] = useState<string[]>([]);
+
+  useEffect(() => {
+    const storedContent = localStorage.getItem('contentList');
+    if (storedContent) {
+      setContent(JSON.parse(storedContent));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('contentList', JSON.stringify(content));
+  }, [content]);
 
   const handleInputChange = (key: string, value: string) => {
-    setNewContent((prev) => ({ ...prev, [key]: value }))
-  }
+    setNewContent((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handleAddContent = () => {
     if (date && newContent.title) {
-      setContent([...content, { ...newContent, date }])
+      setContent([...content, { ...newContent, date }]);
       setNewContent({
         date: new Date(),
         title: "",
@@ -51,22 +63,22 @@ export function EnhancedContentCalendarComponent() {
         media: "",
         caption: "",
         hashtags: "",
-      })
-      setIsDialogOpen(false)
+      });
+      setIsDialogOpen(false);
     }
-  }
+  };
 
   const handleAddField = () => {
-    const fieldName = prompt("Enter the name of the new field:")
+    const fieldName = prompt("Enter the name of the new field:");
     if (fieldName && !additionalFields.includes(fieldName)) {
-      setAdditionalFields([...additionalFields, fieldName])
-      setNewContent((prev) => ({ ...prev, [fieldName]: "" }))
+      setAdditionalFields([...additionalFields, fieldName]);
+      setNewContent((prev) => ({ ...prev, [fieldName]: "" }));
     }
-  }
+  };
 
   const contentForSelectedDate = content.filter(
     (item) => item.date.toDateString() === date?.toDateString()
-  )
+  );
 
   return (
     <div className="flex flex-col items-center space-y-4 p-4">
@@ -168,7 +180,11 @@ export function EnhancedContentCalendarComponent() {
                     </Label>
                     <Input
                       id={field}
-                      value={newContent[field] instanceof Date ? newContent[field].toISOString() : newContent[field] || ""}
+                      value={
+                        newContent[field] instanceof Date
+                          ? newContent[field].toISOString()
+                          : newContent[field] || ""
+                      }
                       onChange={(e) => handleInputChange(field, e.target.value)}
                       className="col-span-3"
                     />
@@ -207,5 +223,5 @@ export function EnhancedContentCalendarComponent() {
         </div>
       </div>
     </div>
-  )
+  );
 }
