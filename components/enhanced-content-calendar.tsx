@@ -1,6 +1,4 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,23 +10,23 @@ import { Label } from "@/components/ui/label";
 import { table } from '@/lib/airtable';
 
 type ContentItem = {
-  date: Date;
+  date: string;
   title: string;
   platform: string;
   media: string;
   caption: string;
   hashtags: string;
-  [key: string]: string | Date; // Allow for additional fields
+  [key: string]: string | Date;
 };
 
-const platforms = ["Instagram", "Website", "LinkedIn"];
-const mediaTypes = ["Video", "Image", "Blog", "Carousel"];
+const platforms = ["Instagram", "TikTok", "LinkedIn"];
+const mediaTypes = ["Video", "Image", "Carousel"];
 
 export function EnhancedContentCalendarComponent() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [content, setContent] = useState<ContentItem[]>([]);
   const [newContent, setNewContent] = useState<ContentItem>({
-    date: new Date(),
+    date: new Date().toISOString().split('T')[0],
     title: "",
     platform: "",
     media: "",
@@ -39,25 +37,37 @@ export function EnhancedContentCalendarComponent() {
   const [additionalFields, setAdditionalFields] = useState<string[]>([]);
 
   useEffect(() => {
-    const storedContent = localStorage.getItem('contentList');
-    if (storedContent) {
-      setContent(JSON.parse(storedContent));
-    }
+    const fetchData = async () => {
+      const records = await table.select().all();
+      const loadedContent = records.map(record => ({
+        date: record.get('date'),
+        title: record.get('title'),
+        platform: record.get('platform'),
+        media: record.get('media'),
+        caption: record.get('caption'),
+        hashtags: record.get('hashtags'),
+      }));
+      setContent(loadedContent);
+    };
+    fetchData();
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem('contentList', JSON.stringify(content));
-  }, [content]);
 
   const handleInputChange = (key: string, value: string) => {
     setNewContent((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleAddContent = () => {
+  const handleAddContent = async () => {
     if (date && newContent.title) {
-      setContent([...content, { ...newContent, date }]);
+      const newRecord = {
+        fields: {
+          ...newContent,
+          date: date.toISOString().split('T')[0],
+        }
+      };
+      await table.create(newRecord);
+      setContent([...content, newRecord.fields]);
       setNewContent({
-        date: new Date(),
+        date: new Date().toISOString().split('T')[0],
         title: "",
         platform: "",
         media: "",
@@ -77,7 +87,7 @@ export function EnhancedContentCalendarComponent() {
   };
 
   const contentForSelectedDate = content.filter(
-    (item) => item.date.toDateString() === date?.toDateString()
+    (item) => new Date(item.date).toDateString() === date?.toDateString()
   );
 
   return (
@@ -206,22 +216,4 @@ export function EnhancedContentCalendarComponent() {
                 <div key={index} className="mb-4 p-2 border rounded">
                   <h3 className="font-medium">{item.title}</h3>
                   <p className="text-sm text-gray-600">Platform: {item.platform}</p>
-                  <p className="text-sm text-gray-600">Media: {item.media}</p>
-                  <p className="text-sm text-gray-600">Caption: {item.caption}</p>
-                  <p className="text-sm text-gray-600">Hashtags: {item.hashtags}</p>
-                  {additionalFields.map((field) => (
-                    <p key={field} className="text-sm text-gray-600">
-                      {field}: {item[field] instanceof Date ? item[field].toDateString() : item[field]}
-                    </p>
-                  ))}
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500">No content for this date.</p>
-            )}
-          </ScrollArea>
-        </div>
-      </div>
-    </div>
-  );
-}
+                  <p className="text-sm
